@@ -25,7 +25,7 @@ describe('User Controllers', () => {
     testService = app.get(TestService);
   });
 
-  describe('POST /api/user', () => {
+  describe('POST /api/users', () => {
     beforeEach(async () => {
       testService.deleteUser();
     });
@@ -75,6 +75,43 @@ describe('User Controllers', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.errors).toBeDefined();
+    });
+  });
+
+  describe('POST /api/users/login', () => {
+    beforeEach(async () => {
+      testService.deleteUser();
+      testService.createUser();
+    });
+
+    it('should be rejected if data invalid', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/users/login')
+        .send({
+          username: '',
+          password: '',
+        });
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(400);
+      expect(response.body.errors).toBeDefined();
+    });
+
+    it('should be eble to login', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/users/login')
+        .send({
+          username: 'test',
+          password: 'test',
+        });
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.username).toBe('test');
+      expect(response.body.data.name).toBe('test');
+      expect(response.body.data.token).toBeDefined();
     });
   });
 });

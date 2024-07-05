@@ -2,10 +2,15 @@ import { Logger } from 'winston';
 import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import * as bcrypt from 'bcrypt';
+import { v4 as uuid } from 'uuid';
 
 import { PrismaService } from '../common/prisma.service';
 import { ValidationService } from '../common/validation.service';
-import { RegisterUserRequest, UserResponse } from '../model/user.model';
+import {
+  LoginUserRequest,
+  RegisterUserRequest,
+  UserResponse,
+} from '../model/user.model';
 import { UserValidation } from './user.validation';
 
 @Injectable()
@@ -17,7 +22,9 @@ export class UserService {
   ) {}
 
   async register(request: RegisterUserRequest): Promise<UserResponse> {
-    this.logger.info(`Register new user ${JSON.stringify(request)}`);
+    this.logger.info(
+      `UserService.register :  Register new user ${JSON.stringify(request)}`,
+    );
     const registerRequest: RegisterUserRequest =
       this.validationService.validate(UserValidation.REGISTER, request);
 
@@ -38,6 +45,47 @@ export class UserService {
     return {
       username: user.username,
       name: user.name,
+    };
+  }
+
+  async login(request: LoginUserRequest): Promise<UserResponse> {
+    this.logger.info(
+      `UserService.login : Login user ${JSON.stringify(request)}`,
+    );
+
+    const loginRequest: LoginUserRequest = this.validationService.validate(
+      UserValidation.LOGIN,
+      request,
+    );
+
+    const existingUser = await this.prismaService.user.findUnique({
+      where: {
+        username: loginRequest.username,
+      },
+    });
+
+    if (!existingUser) {
+      throw new HttpException('Username or Password invalid', 401);
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      loginRequest.password,
+      existingUser.password,
+    );
+
+    if (!isPasswordValid) {
+      throw new HttpException('Username or Password invalid', 401);
+    }
+
+    const user = await this.prismaService.user.update({
+      where: { username: existingUser.username },
+      data: { token: uuid() },
+    });
+
+    return {
+      name: user.name,
+      username: user.username,
+      token: user.token,
     };
   }
 }

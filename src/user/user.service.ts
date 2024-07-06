@@ -3,6 +3,7 @@ import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuid } from 'uuid';
+import { User } from '@prisma/client';
 
 import { PrismaService } from '../common/prisma.service';
 import { ValidationService } from '../common/validation.service';
@@ -64,6 +65,8 @@ export class UserService {
       },
     });
 
+    console.log({ existingUser });
+
     if (!existingUser) {
       throw new HttpException('Username or Password invalid', 401);
     }
@@ -86,6 +89,13 @@ export class UserService {
       name: user.name,
       username: user.username,
       token: user.token,
+    };
+  }
+
+  async get(user: User): Promise<UserResponse> {
+    return {
+      name: user.name,
+      username: user.username,
     };
   }
 }

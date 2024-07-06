@@ -10,6 +10,7 @@ import { ValidationService } from '../common/validation.service';
 import {
   LoginUserRequest,
   RegisterUserRequest,
+  UpdateUserRequest,
   UserResponse,
 } from '../model/user.model';
 import { UserValidation } from './user.validation';
@@ -23,7 +24,7 @@ export class UserService {
   ) {}
 
   async register(request: RegisterUserRequest): Promise<UserResponse> {
-    this.logger.info(
+    this.logger.debug(
       `UserService.register :  Register new user ${JSON.stringify(request)}`,
     );
     const registerRequest: RegisterUserRequest =
@@ -50,7 +51,7 @@ export class UserService {
   }
 
   async login(request: LoginUserRequest): Promise<UserResponse> {
-    this.logger.info(
+    this.logger.debug(
       `UserService.login : Login user ${JSON.stringify(request)}`,
     );
 
@@ -64,8 +65,6 @@ export class UserService {
         username: loginRequest.username,
       },
     });
-
-    console.log({ existingUser });
 
     if (!existingUser) {
       throw new HttpException('Username or Password invalid', 401);
@@ -96,6 +95,35 @@ export class UserService {
     return {
       name: user.name,
       username: user.username,
+    };
+  }
+
+  async update(user: User, request: UpdateUserRequest): Promise<UserResponse> {
+    this.logger.debug(
+      `UserService.update : update user (${JSON.stringify(user)}, ${JSON.stringify(request)})`,
+    );
+
+    const updateRequest: UpdateUserRequest = this.validationService.validate(
+      UserValidation.UPDATE,
+      request,
+    );
+
+    if (updateRequest.name) {
+      user.name = updateRequest.name;
+    }
+
+    if (updateRequest.password) {
+      user.password = await bcrypt.hash(updateRequest.password, 10);
+    }
+
+    const result = await this.prismaService.user.update({
+      where: { username: user.username },
+      data: user,
+    });
+
+    return {
+      username: result.username,
+      name: result.name,
     };
   }
 }

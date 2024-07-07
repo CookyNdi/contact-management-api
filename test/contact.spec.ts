@@ -323,9 +323,9 @@ describe('UserController', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.data.length).toBe(0);
-      expect(response.body.paging.current_page).toBe(2);
-      expect(response.body.paging.total_page).toBe(1);
-      expect(response.body.paging.size).toBe(1);
+      expect(response.body.pagging.current_page).toBe(2);
+      expect(response.body.pagging.total_page).toBe(1);
+      expect(response.body.pagging.size).toBe(1);
     });
   });
 });

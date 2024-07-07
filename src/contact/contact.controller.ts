@@ -38,7 +38,7 @@ export class ContactController {
     };
   }
 
-  @Get(':/contactId')
+  @Get('/:contactId')
   @HttpCode(200)
   async get(
     @Auth() user: User,
@@ -50,7 +50,7 @@ export class ContactController {
     };
   }
 
-  @Put()
+  @Put('/:contactId')
   @HttpCode(200)
   async update(
     @Auth() user: User,
@@ -64,7 +64,7 @@ export class ContactController {
     };
   }
 
-  @Delete(':/contactId')
+  @Delete('/:contactId')
   @HttpCode(200)
   async remove(
     @Auth() user: User,
@@ -93,7 +93,6 @@ export class ContactController {
       page: page || 1,
       size: size || 10,
     };
-
     return this.contactService.search(user, request);
   }
 }
